@@ -14,7 +14,7 @@ public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne
+    @ManyToOne
     private User teacher;
     @ManyToMany
     private ArrayList<User> students;
