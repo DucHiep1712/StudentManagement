@@ -1,8 +1,11 @@
 package com.example.StudentManagement.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -19,15 +22,17 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String username;
+    @JsonIgnore
     private String password;
-    @ManyToMany
-    private List<Course> courses = new ArrayList<>();
+    @OneToMany
+    private List<Course> courses;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
+    @JsonIgnore
+    private List<Authority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> roles = new ArrayList<>();
-        roles.add(new Authority("ROLE_STUDENT"));
-        return roles;
+        return authorities;
     }
 
     @Override
