@@ -2,12 +2,10 @@ package com.example.StudentManagement.service;
 
 import com.example.StudentManagement.domain.Course;
 import com.example.StudentManagement.domain.User;
-import com.example.StudentManagement.enums.AuthorityEnum;
 import com.example.StudentManagement.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,12 +23,11 @@ public class CourseService {
 
     public Set<Course> findByUser(User user) {
         // Load courses for teacher
-        if (user.getAuthorities()
-                .stream().anyMatch(auth -> auth.getAuthority().equals(AuthorityEnum.ROLE_TEACHER))) {
+        if ("ROLE_TEACHER".equals(user.getAuthority().getName())) {
             return courseRepository.findByTeacher(user);
         } else {
             // Load courses for student
-            return courseRepository.findByStudents(user);
+            return courseRepository.findByStudent(user.getId());
         }
     }
 

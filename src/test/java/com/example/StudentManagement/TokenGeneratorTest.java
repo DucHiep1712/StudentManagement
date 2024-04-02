@@ -45,7 +45,7 @@ public class TokenGeneratorTest {
                 new UsernamePasswordAuthenticationToken("duchiep", "Motconvit1?")
         );
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails);
+        String token = jwtUtil.generateToken((com.example.StudentManagement.domain.User) userDetails);
 
         // Output the token for demonstration purposes (In real tests, you should assert expected values)
         System.out.println(token);
