@@ -7,6 +7,7 @@ import com.example.StudentManagement.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class CourseController {
     @CrossOrigin
     @GetMapping("")
     public ResponseEntity<?> getCourse(@AuthenticationPrincipal User user) {
-        Set<Course> coursesByUser = courseService.findByUser(user);
+        Set<Course> coursesByUser = courseService.findByUserId(user);
 
         return ResponseEntity.ok(coursesByUser);
     }
@@ -39,15 +40,26 @@ public class CourseController {
     @CrossOrigin
     @GetMapping("{courseId}/students")
     public ResponseEntity<?> getUnenrolledStudents(@PathVariable Long courseId, @AuthenticationPrincipal User user) {
-        Course course = courseService.findById(courseId).orElseThrow(() -> new NoSuchElementException("Course not found"));
+        Optional<Course> currentCourse = courseService.findById(courseId);
+
+        if (currentCourse.isEmpty()) {
+            return ResponseEntity.ok("Course not found");
+        }
+
+        List<User> enrolledStudents = currentCourse.get().getStudents();
+
         Set<User> studentSet = userDetailsService.findUsersByAuthority("ROLE_STUDENT");
 
         List<User> unenrolledStudents = new ArrayList<>();
 
+        for (User student: enrolledStudents) {
+            System.out.println(student.getId());
+        }
+
         for (User student: studentSet) {
-            if (!(course.getStudents().contains(student))) {
-                System.out.println(student.getId());
+            if (!enrolledStudents.contains(student)) {
                 unenrolledStudents.add(student);
+                System.out.println("dsa " + student.getId());
             }
         }
 
@@ -57,7 +69,7 @@ public class CourseController {
     @CrossOrigin
     @PostMapping("")
     public ResponseEntity<?> createCourse(@AuthenticationPrincipal User user) {
-        Course newCourse = courseService.save(user);
+        Course newCourse = courseService.create(user);
 
         return ResponseEntity.ok(newCourse);
     }
@@ -76,8 +88,8 @@ public class CourseController {
 
     @CrossOrigin
     @PutMapping("{courseId}")
-    public ResponseEntity<?> createCourse(@PathVariable Long courseId, @RequestBody Course course, @AuthenticationPrincipal User user) {
-        Course updatedCourse = courseService.save(course);
+    public ResponseEntity<?> updateCourse(@PathVariable Long courseId, @RequestBody Course course, @AuthenticationPrincipal User user) {
+        Course updatedCourse = courseService.update(course);
 
         return ResponseEntity.ok(updatedCourse);
     }
@@ -85,10 +97,19 @@ public class CourseController {
     @CrossOrigin
     @PostMapping("{courseId}/removeStudent")
     public ResponseEntity<?> removeStudent(@PathVariable Long courseId, @RequestBody Long studentId, @AuthenticationPrincipal User user) {
-        User student = userDetailsService.findById(studentId);
-        Course course = courseService.findById(courseId).orElseThrow(() -> new NoSuchElementException("Course not found"));
+        // Input validation
+        if (courseId == null || studentId == null) {
+            return ResponseEntity.badRequest().body("Invalid input");
+        }
 
+        // Retrieve student and course
+        User student = userDetailsService.findById(studentId);
+        Course course = courseService.findById(courseId)
+                .orElseThrow(() -> new NoSuchElementException("Course not found"));
+
+        // Remove student from the course
         course.getStudents().remove(student);
+        // Save the updated course within a transaction
         courseService.save(course);
 
         return ResponseEntity.ok(course);

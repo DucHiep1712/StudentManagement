@@ -14,20 +14,25 @@ public class CourseService {
     @Autowired
     private CourseRepository courseRepository;
 
-    public Course save(User user) {
+    public Course create(User user) {
         Course course = new Course();
-        course.setTeacher(user);
+        course.setTeacherId(user.getId());
 
         return courseRepository.save(course);
     }
 
-    public Set<Course> findByUser(User user) {
+    public Course update(Course course) {
+        return courseRepository.save(course);
+    }
+
+    public Set<Course> findByUserId(User user) {
         // Load courses for teacher
-        if ("ROLE_TEACHER".equals(user.getAuthority().getName())) {
-            return courseRepository.findByTeacher(user);
+        if (user.getAuthorities()
+                .stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TEACHER"))) {
+            return courseRepository.findByTeacherId(user.getId());
         } else {
             // Load courses for student
-            return courseRepository.findByStudent(user.getId());
+            return courseRepository.findByStudentId(user.getId());
         }
     }
 

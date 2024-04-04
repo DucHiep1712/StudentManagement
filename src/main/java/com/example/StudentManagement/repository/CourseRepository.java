@@ -6,12 +6,16 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
-    @Query("SELECT c FROM Course c JOIN c.students s WHERE s.id = :studentId")
-    Set<Course> findByStudent(Long studentId);
+
+
+    @Query(value = "SELECT * FROM course c INNER JOIN course_students cs WHERE cs.students_id = :studentId AND c.id = cs.course_id", nativeQuery = true)
+    Set<Course> findByStudentId(Long studentId);
 
 //    @Query("select * from course where course.teacher_id =" + user.id)
-    Set<Course> findByTeacher(User currentUser);
+//    @Query("SELECT c FROM Course c WHERE c.teacherId = :teacherid")
+    Set<Course> findByTeacherId(Long teacherId);
 }
